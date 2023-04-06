@@ -6,7 +6,7 @@
  *
  */
 
-import React, { ComponentType, useCallback, useRef, useEffect } from "react";
+import React, { ComponentType, useCallback, useRef, useEffect } from 'react';
 import {
   Animated,
   Dimensions,
@@ -15,39 +15,47 @@ import {
   VirtualizedList,
   ModalProps,
   Modal,
-} from "react-native";
+  Image,
+} from 'react-native';
 
-import ImageItem from "./components/ImageItem/ImageItem";
-import ImageDefaultHeader from "./components/ImageDefaultHeader";
-import StatusBarManager from "./components/StatusBarManager";
+import ImageItem, { ImageItemType } from './components/ImageItem/ImageItem';
+import ImageDefaultHeader from './components/ImageDefaultHeader';
+import StatusBarManager from './components/StatusBarManager';
 
-import useAnimatedComponents from "./hooks/useAnimatedComponents";
-import useImageIndexChange from "./hooks/useImageIndexChange";
-import useRequestClose from "./hooks/useRequestClose";
-import { ImageSource } from "./@types";
+import useAnimatedComponents from './hooks/useAnimatedComponents';
+import useImageIndexChange from './hooks/useImageIndexChange';
+import useRequestClose from './hooks/useRequestClose';
+import { ImageSource } from './@types';
 
-type Props = {
-  images: ImageSource[];
+type Props<T = undefined> = {
+  images: ImageItemType<T>[];
   keyExtractor?: (imageSrc: ImageSource, index: number) => string;
   imageIndex: number;
   visible: boolean;
   onRequestClose: () => void;
   onLongPress?: (image: ImageSource) => void;
   onImageIndexChange?: (imageIndex: number) => void;
-  presentationStyle?: ModalProps["presentationStyle"];
-  animationType?: ModalProps["animationType"];
+  presentationStyle?: ModalProps['presentationStyle'];
+  animationType?: ModalProps['animationType'];
   backgroundColor?: string;
   swipeToCloseEnabled?: boolean;
   doubleTapToZoomEnabled?: boolean;
   delayLongPress?: number;
+  renderCustomComponent?: ({
+    item,
+    onLoad,
+  }: {
+    item: ImageItemType<T>;
+    onLoad: () => void;
+  }) => Animated.AnimatedComponent<typeof Image>;
   HeaderComponent?: ComponentType<{ imageIndex: number }>;
   FooterComponent?: ComponentType<{ imageIndex: number }>;
 };
 
-const DEFAULT_ANIMATION_TYPE = "fade";
-const DEFAULT_BG_COLOR = "#000";
+const DEFAULT_ANIMATION_TYPE = 'fade';
+const DEFAULT_BG_COLOR = '#000';
 const DEFAULT_DELAY_LONG_PRESS = 800;
-const SCREEN = Dimensions.get("screen");
+const SCREEN = Dimensions.get('screen');
 const SCREEN_WIDTH = SCREEN.width;
 
 function ImageViewing({
@@ -66,12 +74,12 @@ function ImageViewing({
   delayLongPress = DEFAULT_DELAY_LONG_PRESS,
   HeaderComponent,
   FooterComponent,
+  renderCustomComponent,
 }: Props) {
-  const imageList = useRef<VirtualizedList<ImageSource>>(null);
+  const imageList = useRef<VirtualizedList<ImageItemType>>(null);
   const [opacity, onRequestCloseEnhanced] = useRequestClose(onRequestClose);
   const [currentImageIndex, onScroll] = useImageIndexChange(imageIndex, SCREEN);
-  const [headerTransform, footerTransform, toggleBarsVisible] =
-    useAnimatedComponents();
+  const [headerTransform, footerTransform, toggleBarsVisible] = useAnimatedComponents();
 
   useEffect(() => {
     if (onImageIndexChange) {
@@ -85,7 +93,7 @@ function ImageViewing({
       imageList?.current?.setNativeProps({ scrollEnabled: !isScaled });
       toggleBarsVisible(!isScaled);
     },
-    [imageList]
+    [imageList],
   );
 
   if (!visible) {
@@ -94,18 +102,17 @@ function ImageViewing({
 
   return (
     <Modal
-      transparent={presentationStyle === "overFullScreen"}
+      transparent={presentationStyle === 'overFullScreen'}
       visible={visible}
       presentationStyle={presentationStyle}
       animationType={animationType}
       onRequestClose={onRequestCloseEnhanced}
-      supportedOrientations={["portrait"]}
-      hardwareAccelerated
-    >
+      supportedOrientations={['portrait']}
+      hardwareAccelerated>
       <StatusBarManager presentationStyle={presentationStyle} />
       <View style={[styles.container, { opacity, backgroundColor }]}>
         <Animated.View style={[styles.header, { transform: headerTransform }]}>
-          {typeof HeaderComponent !== "undefined" ? (
+          {typeof HeaderComponent !== 'undefined' ? (
             React.createElement(HeaderComponent, {
               imageIndex: currentImageIndex,
             })
@@ -124,38 +131,31 @@ function ImageViewing({
           showsHorizontalScrollIndicator={false}
           showsVerticalScrollIndicator={false}
           initialScrollIndex={imageIndex}
-          getItem={(_, index) => images[index]}
+          getItem={(_: any, index: number) => images[index]}
           getItemCount={() => images.length}
-          getItemLayout={(_, index) => ({
+          getItemLayout={(_: any, index: number) => ({
             length: SCREEN_WIDTH,
             offset: SCREEN_WIDTH * index,
             index,
           })}
-          renderItem={({ item: imageSrc }) => (
+          keyExtractor={(_: any, index: number) => index}
+          renderItem={({ item }: { item: ImageItemType }) => (
             <ImageItem
               onZoom={onZoom}
-              imageSrc={imageSrc}
+              item={item}
               onRequestClose={onRequestCloseEnhanced}
               onLongPress={onLongPress}
               delayLongPress={delayLongPress}
               swipeToCloseEnabled={swipeToCloseEnabled}
               doubleTapToZoomEnabled={doubleTapToZoomEnabled}
+              renderCustomComponent={renderCustomComponent}
             />
           )}
           onMomentumScrollEnd={onScroll}
           //@ts-ignore
-          keyExtractor={(imageSrc, index) =>
-            keyExtractor
-              ? keyExtractor(imageSrc, index)
-              : typeof imageSrc === "number"
-              ? `${imageSrc}`
-              : imageSrc.uri
-          }
         />
-        {typeof FooterComponent !== "undefined" && (
-          <Animated.View
-            style={[styles.footer, { transform: footerTransform }]}
-          >
+        {typeof FooterComponent !== 'undefined' && (
+          <Animated.View style={[styles.footer, { transform: footerTransform }]}>
             {React.createElement(FooterComponent, {
               imageIndex: currentImageIndex,
             })}
@@ -169,24 +169,22 @@ function ImageViewing({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: '#000',
   },
   header: {
-    position: "absolute",
-    width: "100%",
+    position: 'absolute',
+    width: '100%',
     zIndex: 1,
     top: 0,
   },
   footer: {
-    position: "absolute",
-    width: "100%",
+    position: 'absolute',
+    width: '100%',
     zIndex: 1,
     bottom: 0,
   },
 });
 
-const EnhancedImageViewing = (props: Props) => (
-  <ImageViewing key={props.imageIndex} {...props} />
-);
+const EnhancedImageViewing = (props: Props) => <ImageViewing key={props.imageIndex} {...props} />;
 
 export default EnhancedImageViewing;

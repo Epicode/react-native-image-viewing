@@ -7,17 +7,25 @@
  */
 
 import React from "react";
-import { GestureResponderEvent } from "react-native";
+import { Animated, GestureResponderEvent, Image } from "react-native";
 import { ImageSource } from "../../@types";
 
-declare type Props = {
-  imageSrc: ImageSource;
+
+export declare type ImageItemType<T = undefined> = {
+  uri: ImageSource;
+  itemInfo?:T
+}
+
+
+export type ImageItemProps = {
+  item: ImageItemType;
   onRequestClose: () => void;
   onZoom: (isZoomed: boolean) => void;
   onLongPress: (image: ImageSource) => void;
   delayLongPress: number;
   swipeToCloseEnabled?: boolean;
   doubleTapToZoomEnabled?: boolean;
+  renderCustomComponent?:({item,onLoad} :{item:ImageItemTyp,onLoad:() => void}) => Animated.AnimatedComponent<typeof Image>
 };
 
 declare const _default: React.MemoExoticComponent<({
@@ -27,6 +35,6 @@ declare const _default: React.MemoExoticComponent<({
   onLongPress,
   delayLongPress,
   swipeToCloseEnabled,
-}: Props) => JSX.Element>;
+}: ImageItemProps) => JSX.Element>;
 
 export default _default;

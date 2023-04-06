@@ -6,7 +6,7 @@
  *
  */
 
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from 'react';
 
 import {
   Animated,
@@ -18,44 +18,35 @@ import {
   NativeSyntheticEvent,
   TouchableWithoutFeedback,
   GestureResponderEvent,
-} from "react-native";
+} from 'react-native';
 
-import useDoubleTapToZoom from "../../hooks/useDoubleTapToZoom";
-import useImageDimensions from "../../hooks/useImageDimensions";
+import useDoubleTapToZoom from '../../hooks/useDoubleTapToZoom';
+import useImageDimensions from '../../hooks/useImageDimensions';
 
-import { getImageStyles, getImageTransform } from "../../utils";
-import { ImageSource } from "../../@types";
-import { ImageLoading } from "./ImageLoading";
+import { getImageStyles, getImageTransform } from '../../utils';
+import { ImageLoading } from './ImageLoading';
+import { ImageItemProps } from './ImageItem';
 
 const SWIPE_CLOSE_OFFSET = 75;
 const SWIPE_CLOSE_VELOCITY = 1.55;
-const SCREEN = Dimensions.get("screen");
+const SCREEN = Dimensions.get('screen');
 const SCREEN_WIDTH = SCREEN.width;
 const SCREEN_HEIGHT = SCREEN.height;
 
-type Props = {
-  imageSrc: ImageSource;
-  onRequestClose: () => void;
-  onZoom: (scaled: boolean) => void;
-  onLongPress: (image: ImageSource) => void;
-  delayLongPress: number;
-  swipeToCloseEnabled?: boolean;
-  doubleTapToZoomEnabled?: boolean;
-};
-
 const ImageItem = ({
-  imageSrc,
+  item,
   onZoom,
   onRequestClose,
   onLongPress,
   delayLongPress,
   swipeToCloseEnabled = true,
   doubleTapToZoomEnabled = true,
-}: Props) => {
+  renderCustomComponent,
+}: ImageItemProps) => {
   const scrollViewRef = useRef<ScrollView>(null);
   const [loaded, setLoaded] = useState(false);
   const [scaled, setScaled] = useState(false);
-  const imageDimensions = useImageDimensions(imageSrc);
+  const imageDimensions = useImageDimensions(item.uri);
   const handleDoubleTap = useDoubleTapToZoom(scrollViewRef, scaled, SCREEN);
 
   const [translate, scale] = getImageTransform(imageDimensions, SCREEN);
@@ -68,11 +59,7 @@ const ImageItem = ({
     inputRange: [-SWIPE_CLOSE_OFFSET, 0, SWIPE_CLOSE_OFFSET],
     outputRange: [0.5, 1, 0.5],
   });
-  const imagesStyles = getImageStyles(
-    imageDimensions,
-    translateValue,
-    scaleValue
-  );
+  const imagesStyles = getImageStyles(imageDimensions, translateValue, scaleValue);
   const imageStylesWithOpacity = { ...imagesStyles, opacity: imageOpacity };
 
   const onScrollEndDrag = useCallback(
@@ -83,20 +70,14 @@ const ImageItem = ({
       onZoom(scaled);
       setScaled(scaled);
 
-      if (
-        !scaled &&
-        swipeToCloseEnabled &&
-        Math.abs(velocityY) > SWIPE_CLOSE_VELOCITY
-      ) {
+      if (!scaled && swipeToCloseEnabled && Math.abs(velocityY) > SWIPE_CLOSE_VELOCITY) {
         onRequestClose();
       }
     },
-    [scaled]
+    [scaled],
   );
 
-  const onScroll = ({
-    nativeEvent,
-  }: NativeSyntheticEvent<NativeScrollEvent>) => {
+  const onScroll = ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offsetY = nativeEvent?.contentOffset?.y ?? 0;
 
     if (nativeEvent?.zoomScale > 1) {
@@ -108,9 +89,9 @@ const ImageItem = ({
 
   const onLongPressHandler = useCallback(
     (event: GestureResponderEvent) => {
-      onLongPress(imageSrc);
+      onLongPress(item.uri);
     },
-    [imageSrc, onLongPress]
+    [item.uri, onLongPress],
   );
 
   return (
@@ -128,19 +109,21 @@ const ImageItem = ({
         scrollEventThrottle={1}
         {...(swipeToCloseEnabled && {
           onScroll,
-        })}
-      >
+        })}>
         {(!loaded || !imageDimensions) && <ImageLoading />}
         <TouchableWithoutFeedback
           onPress={doubleTapToZoomEnabled ? handleDoubleTap : undefined}
           onLongPress={onLongPressHandler}
-          delayLongPress={delayLongPress}
-        >
-          <Animated.Image
-            source={imageSrc}
-            style={imageStylesWithOpacity}
-            onLoad={() => setLoaded(true)}
-          />
+          delayLongPress={delayLongPress}>
+          {renderCustomComponent ? (
+            renderCustomComponent({ item: item, onLoad: () => setLoaded(true) })
+          ) : (
+            <Animated.Image
+              source={item.uri}
+              style={imageStylesWithOpacity}
+              onLoad={() => setLoaded(true)}
+            />
+          )}
         </TouchableWithoutFeedback>
       </ScrollView>
     </View>

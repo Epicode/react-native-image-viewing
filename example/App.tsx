@@ -18,22 +18,25 @@ import {
 } from "react-native";
 import get from "lodash/get";
 import memoize from "lodash/memoize";
-
 import ImageViewing from "../src/ImageViewing";
 import ImageList from "./components/ImageList";
 import ImageHeader from "./components/ImageHeader";
 import ImageFooter from "./components/ImageFooter";
-
 import { architecture } from "./data/architecture";
 import { travel } from "./data/travel";
 import { city } from "./data/city";
 import { food } from "./data/food";
-
 import { ImageSource } from "../src/@types";
+import { ImageItemType } from "../src/components/ImageItem/ImageItem";
+
+type architectureType = {
+  original:string;
+  thumbnail:string
+}
 
 export default function App() {
   const [currentImageIndex, setImageIndex] = useState(0);
-  const [images, setImages] = useState(architecture);
+  const [images, setImages] = useState<architectureType[]>(architecture);
   const [isVisible, setIsVisible] = useState(false);
 
   const onSelect = (images, index) => {
@@ -43,16 +46,20 @@ export default function App() {
   };
 
   const onRequestClose = () => setIsVisible(false);
-  const getImageSource = memoize((images): ImageSource[] =>
-    images.map((image) =>
-      typeof image.original === "number"
-        ? image.original
-        : { uri: image.original as string }
-    )
+  const getImageSource = memoize((images:architectureType[]): ImageItemType[] =>{
+    return images.map((image) => {
+      return {
+        uri:{uri: image.original}
+      };
+    });
+  }
   );
   const onLongPress = (image) => {
     Alert.alert("Long Pressed", image.uri);
   };
+
+
+  
 
   return (
     <SafeAreaView style={styles.root}>

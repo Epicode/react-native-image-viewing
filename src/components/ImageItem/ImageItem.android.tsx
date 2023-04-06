@@ -15,15 +15,14 @@ import {
   StyleSheet,
   NativeScrollEvent,
   NativeSyntheticEvent,
-  NativeMethodsMixin,
+
 } from "react-native";
 
 import useImageDimensions from "../../hooks/useImageDimensions";
 import usePanResponder from "../../hooks/usePanResponder";
-
 import { getImageStyles, getImageTransform } from "../../utils";
-import { ImageSource } from "../../@types";
 import { ImageLoading } from "./ImageLoading";
+import { ImageItemProps } from "./ImageItem";
 
 const SWIPE_CLOSE_OFFSET = 75;
 const SWIPE_CLOSE_VELOCITY = 1.75;
@@ -31,27 +30,19 @@ const SCREEN = Dimensions.get("window");
 const SCREEN_WIDTH = SCREEN.width;
 const SCREEN_HEIGHT = SCREEN.height;
 
-type Props = {
-  imageSrc: ImageSource;
-  onRequestClose: () => void;
-  onZoom: (isZoomed: boolean) => void;
-  onLongPress: (image: ImageSource) => void;
-  delayLongPress: number;
-  swipeToCloseEnabled?: boolean;
-  doubleTapToZoomEnabled?: boolean;
-};
+
 
 const ImageItem = ({
-  imageSrc,
+  item,
   onZoom,
   onRequestClose,
   onLongPress,
   delayLongPress,
   swipeToCloseEnabled = true,
   doubleTapToZoomEnabled = true,
-}: Props) => {
-  const imageContainer = useRef<ScrollView & NativeMethodsMixin>(null);
-  const imageDimensions = useImageDimensions(imageSrc);
+}: ImageItemProps) => {
+  const imageContainer = useRef<ScrollView>(null);
+  const imageDimensions = useImageDimensions(item.uri);
   const [translate, scale] = getImageTransform(imageDimensions, SCREEN);
   const scrollValueY = new Animated.Value(0);
   const [isLoaded, setLoadEnd] = useState(false);
@@ -70,8 +61,8 @@ const ImageItem = ({
   );
 
   const onLongPressHandler = useCallback(() => {
-    onLongPress(imageSrc);
-  }, [imageSrc, onLongPress]);
+    onLongPress(item.uri);
+  }, [item.uri, onLongPress]);
 
   const [panHandlers, scaleValue, translateValue] = usePanResponder({
     initialScale: scale || 1,
@@ -116,6 +107,8 @@ const ImageItem = ({
     scrollValueY.setValue(offsetY);
   };
 
+
+
   return (
     <ScrollView
       ref={imageContainer}
@@ -133,7 +126,7 @@ const ImageItem = ({
     >
       <Animated.Image
         {...panHandlers}
-        source={imageSrc}
+        source={item.uri}
         style={imageStylesWithOpacity}
         onLoad={onLoaded}
       />
