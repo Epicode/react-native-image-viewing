@@ -40,7 +40,7 @@ const ImageItem = ({
   renderCustomComponent,
 }: ImageItemProps) => {
   const imageContainer = useRef<ScrollView>(null);
-  const [imageDimensions, setDimensions] = useImageDimensions(item.uri);
+  const [imageDimensions, setDimensions] = useImageDimensions();
 
   const [translate, scale] = getImageTransform(imageDimensions, SCREEN);
   const scrollValueY = new Animated.Value(0);

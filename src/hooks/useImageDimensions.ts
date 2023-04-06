@@ -7,13 +7,13 @@
  */
 
 import {  useState } from "react";
-import { Dimensions, ImageSource } from "../@types";
+import { Dimensions } from "../@types";
 import {  Dimensions as RNDimensions } from "react-native";
 
 const windowDimensions = RNDimensions.get('window')
 
 
-const useImageDimensions = (image: ImageSource)=> {
+const useImageDimensions = ()=> {
   const [dimensions, setDimensions] = useState<Dimensions>({width:windowDimensions.width, height:windowDimensions.height});
 
 

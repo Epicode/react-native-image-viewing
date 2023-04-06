@@ -46,7 +46,7 @@ const ImageItem = ({
   const scrollViewRef = useRef<ScrollView>(null);
   const [loaded, setLoaded] = useState(false);
   const [scaled, setScaled] = useState(false);
-  const [imageDimensions, setDimensions] = useImageDimensions(item.uri);
+  const [imageDimensions, setDimensions] = useImageDimensions();
   const handleDoubleTap = useDoubleTapToZoom(scrollViewRef, scaled, SCREEN);
 
   const [translate, scale] = getImageTransform(imageDimensions, SCREEN);
@@ -87,12 +87,9 @@ const ImageItem = ({
     scrollValueY.setValue(offsetY);
   };
 
-  const onLongPressHandler = useCallback(
-    (event: GestureResponderEvent) => {
-      onLongPress(item.uri);
-    },
-    [item.uri, onLongPress],
-  );
+  const onLongPressHandler = useCallback(() => {
+    onLongPress(item.uri);
+  }, [item.uri, onLongPress]);
 
   return (
     <View>
