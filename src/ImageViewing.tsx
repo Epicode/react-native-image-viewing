@@ -16,8 +16,10 @@ import {
   ModalProps,
   Modal,
   Image,
+  ViewStyle,
+  StyleProp,
+  RegisteredStyle,
 } from 'react-native';
-
 import ImageItem, { ImageItemType } from './components/ImageItem/ImageItem';
 import ImageDefaultHeader from './components/ImageDefaultHeader';
 import StatusBarManager from './components/StatusBarManager';
@@ -26,6 +28,7 @@ import useAnimatedComponents from './hooks/useAnimatedComponents';
 import useImageIndexChange from './hooks/useImageIndexChange';
 import useRequestClose from './hooks/useRequestClose';
 import { ImageSource } from './@types';
+import { ImageStyle } from 'react-native';
 
 type Props<T = undefined> = {
   images: ImageItemType<T>[];
@@ -41,13 +44,14 @@ type Props<T = undefined> = {
   swipeToCloseEnabled?: boolean;
   doubleTapToZoomEnabled?: boolean;
   delayLongPress?: number;
-  renderCustomComponent?: ({
+  renderCustomComponent: ({
     item,
     onLoad,
   }: {
-    item: ImageItemType<T>;
-    onLoad: () => void;
-  }) => Animated.AnimatedComponent<typeof Image>;
+    item: ImageItemType;
+    onLoad: (width: number, height: number) => void;
+    style: Animated.WithAnimatedValue<ImageStyle>;
+  }) => React.ReactElement;
   HeaderComponent?: ComponentType<{ imageIndex: number }>;
   FooterComponent?: ComponentType<{ imageIndex: number }>;
 };

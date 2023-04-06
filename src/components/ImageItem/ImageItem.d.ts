@@ -7,7 +7,7 @@
  */
 
 import React from "react";
-import { Animated, GestureResponderEvent, Image } from "react-native";
+import { Animated, GestureResponderEvent, Image, ViewStyle,StyleProp,GestureResponderHandler, ImageStyle } from "react-native";
 import { ImageSource } from "../../@types";
 
 
@@ -25,7 +25,11 @@ export type ImageItemProps = {
   delayLongPress: number;
   swipeToCloseEnabled?: boolean;
   doubleTapToZoomEnabled?: boolean;
-  renderCustomComponent?:({item,onLoad} :{item:ImageItemTyp,onLoad:() => void}) => Animated.AnimatedComponent<typeof Image>
+  renderCustomComponent:({item,onLoad,style,panHandlers} :{item:ImageItemType,onLoad:(width:number, height:number) => 
+    void,  
+     panHandlers?:GestureResponderHandler,
+     style: Animated.WithAnimatedValue<ImageStyle>
+  }) =>React.ReactElement
 };
 
 declare const _default: React.MemoExoticComponent<({

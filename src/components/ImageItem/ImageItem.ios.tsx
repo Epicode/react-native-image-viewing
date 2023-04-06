@@ -46,7 +46,7 @@ const ImageItem = ({
   const scrollViewRef = useRef<ScrollView>(null);
   const [loaded, setLoaded] = useState(false);
   const [scaled, setScaled] = useState(false);
-  const imageDimensions = useImageDimensions(item.uri);
+  const [imageDimensions, setDimensions] = useImageDimensions(item.uri);
   const handleDoubleTap = useDoubleTapToZoom(scrollViewRef, scaled, SCREEN);
 
   const [translate, scale] = getImageTransform(imageDimensions, SCREEN);
@@ -110,20 +110,19 @@ const ImageItem = ({
         {...(swipeToCloseEnabled && {
           onScroll,
         })}>
-        {(!loaded || !imageDimensions) && <ImageLoading />}
+        {!loaded && <ImageLoading />}
         <TouchableWithoutFeedback
           onPress={doubleTapToZoomEnabled ? handleDoubleTap : undefined}
           onLongPress={onLongPressHandler}
           delayLongPress={delayLongPress}>
-          {renderCustomComponent ? (
-            renderCustomComponent({ item: item, onLoad: () => setLoaded(true) })
-          ) : (
-            <Animated.Image
-              source={item.uri}
-              style={imageStylesWithOpacity}
-              onLoad={() => setLoaded(true)}
-            />
-          )}
+          {renderCustomComponent({
+            item: item,
+            onLoad: (width: number, height: number) => {
+              setLoaded(true);
+              setDimensions({ width: width, height: height });
+            },
+            style: imageStylesWithOpacity,
+          })}
         </TouchableWithoutFeedback>
       </ScrollView>
     </View>

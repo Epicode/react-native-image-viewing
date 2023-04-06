@@ -17,6 +17,7 @@ module.exports = {
       }
     )
   },
+  sourceExts: ['jsx', 'js', 'ts', 'tsx', 'cjs', 'json'],
   projectRoot: path.resolve(__dirname),
   watchFolders: [path.resolve(__dirname, "../src")]
 };

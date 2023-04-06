@@ -6,7 +6,7 @@
  *
  */
 
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from 'react';
 
 import {
   Animated,
@@ -15,22 +15,19 @@ import {
   StyleSheet,
   NativeScrollEvent,
   NativeSyntheticEvent,
+} from 'react-native';
 
-} from "react-native";
-
-import useImageDimensions from "../../hooks/useImageDimensions";
-import usePanResponder from "../../hooks/usePanResponder";
-import { getImageStyles, getImageTransform } from "../../utils";
-import { ImageLoading } from "./ImageLoading";
-import { ImageItemProps } from "./ImageItem";
+import useImageDimensions from '../../hooks/useImageDimensions';
+import usePanResponder from '../../hooks/usePanResponder';
+import { getImageStyles, getImageTransform } from '../../utils';
+import { ImageLoading } from './ImageLoading';
+import { ImageItemProps } from './ImageItem';
 
 const SWIPE_CLOSE_OFFSET = 75;
 const SWIPE_CLOSE_VELOCITY = 1.75;
-const SCREEN = Dimensions.get("window");
+const SCREEN = Dimensions.get('window');
 const SCREEN_WIDTH = SCREEN.width;
 const SCREEN_HEIGHT = SCREEN.height;
-
-
 
 const ImageItem = ({
   item,
@@ -40,14 +37,15 @@ const ImageItem = ({
   delayLongPress,
   swipeToCloseEnabled = true,
   doubleTapToZoomEnabled = true,
+  renderCustomComponent,
 }: ImageItemProps) => {
   const imageContainer = useRef<ScrollView>(null);
-  const imageDimensions = useImageDimensions(item.uri);
+  const [imageDimensions, setDimensions] = useImageDimensions(item.uri);
+
   const [translate, scale] = getImageTransform(imageDimensions, SCREEN);
   const scrollValueY = new Animated.Value(0);
-  const [isLoaded, setLoadEnd] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
-  const onLoaded = useCallback(() => setLoadEnd(true), []);
   const onZoomPerformed = useCallback(
     (isZoomed: boolean) => {
       onZoom(isZoomed);
@@ -57,7 +55,7 @@ const ImageItem = ({
         });
       }
     },
-    [imageContainer]
+    [imageContainer],
   );
 
   const onLongPressHandler = useCallback(() => {
@@ -73,41 +71,30 @@ const ImageItem = ({
     delayLongPress,
   });
 
-  const imagesStyles = getImageStyles(
-    imageDimensions,
-    translateValue,
-    scaleValue
-  );
+  const imagesStyles = getImageStyles(imageDimensions, translateValue, scaleValue);
   const imageOpacity = scrollValueY.interpolate({
     inputRange: [-SWIPE_CLOSE_OFFSET, 0, SWIPE_CLOSE_OFFSET],
     outputRange: [0.7, 1, 0.7],
   });
   const imageStylesWithOpacity = { ...imagesStyles, opacity: imageOpacity };
 
-  const onScrollEndDrag = ({
-    nativeEvent,
-  }: NativeSyntheticEvent<NativeScrollEvent>) => {
+  const onScrollEndDrag = ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
     const velocityY = nativeEvent?.velocity?.y ?? 0;
     const offsetY = nativeEvent?.contentOffset?.y ?? 0;
 
     if (
-      (Math.abs(velocityY) > SWIPE_CLOSE_VELOCITY &&
-        offsetY > SWIPE_CLOSE_OFFSET) ||
+      (Math.abs(velocityY) > SWIPE_CLOSE_VELOCITY && offsetY > SWIPE_CLOSE_OFFSET) ||
       offsetY > SCREEN_HEIGHT / 2
     ) {
       onRequestClose();
     }
   };
 
-  const onScroll = ({
-    nativeEvent,
-  }: NativeSyntheticEvent<NativeScrollEvent>) => {
+  const onScroll = ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offsetY = nativeEvent?.contentOffset?.y ?? 0;
 
     scrollValueY.setValue(offsetY);
   };
-
-
 
   return (
     <ScrollView
@@ -122,15 +109,16 @@ const ImageItem = ({
       {...(swipeToCloseEnabled && {
         onScroll,
         onScrollEndDrag,
+      })}>
+      {renderCustomComponent({
+        item: item,
+        onLoad: (width: number, height: number) => {
+          setLoaded(true);
+          setDimensions({ width: width, height: height });
+        },
+        style: imageStylesWithOpacity,
       })}
-    >
-      <Animated.Image
-        {...panHandlers}
-        source={item.uri}
-        style={imageStylesWithOpacity}
-        onLoad={onLoaded}
-      />
-      {(!isLoaded || !imageDimensions) && <ImageLoading />}
+      {!loaded && <ImageLoading />}
     </ScrollView>
   );
 };

@@ -6,33 +6,33 @@
  *
  */
 
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   Alert,
+  Animated,
   Platform,
   SafeAreaView,
   StatusBar,
   StyleSheet,
   Text,
   View,
-} from "react-native";
-import get from "lodash/get";
-import memoize from "lodash/memoize";
-import ImageViewing from "../src/ImageViewing";
-import ImageList from "./components/ImageList";
-import ImageHeader from "./components/ImageHeader";
-import ImageFooter from "./components/ImageFooter";
-import { architecture } from "./data/architecture";
-import { travel } from "./data/travel";
-import { city } from "./data/city";
-import { food } from "./data/food";
-import { ImageSource } from "../src/@types";
-import { ImageItemType } from "../src/components/ImageItem/ImageItem";
+} from 'react-native';
+import get from 'lodash/get';
+import memoize from 'lodash/memoize';
+import ImageViewing from '../src/ImageViewing';
+import ImageList from './components/ImageList';
+import ImageHeader from './components/ImageHeader';
+import ImageFooter from './components/ImageFooter';
+import { architecture } from './data/architecture';
+import { travel } from './data/travel';
+import { city } from './data/city';
+import { food } from './data/food';
+import { ImageItemType } from '../src/components/ImageItem/ImageItem';
 
 type architectureType = {
-  original:string;
-  thumbnail:string
-}
+  original: string;
+  thumbnail: string;
+};
 
 export default function App() {
   const [currentImageIndex, setImageIndex] = useState(0);
@@ -46,20 +46,16 @@ export default function App() {
   };
 
   const onRequestClose = () => setIsVisible(false);
-  const getImageSource = memoize((images:architectureType[]): ImageItemType[] =>{
+  const getImageSource = memoize((images: architectureType[]): ImageItemType[] => {
     return images.map((image) => {
       return {
-        uri:{uri: image.original}
+        uri: { uri: image.original },
       };
     });
-  }
-  );
+  });
   const onLongPress = (image) => {
-    Alert.alert("Long Pressed", image.uri);
+    Alert.alert('Long Pressed', image.uri);
   };
-
-
-  
 
   return (
     <SafeAreaView style={styles.root}>
@@ -83,19 +79,30 @@ export default function App() {
         visible={isVisible}
         onRequestClose={onRequestClose}
         onLongPress={onLongPress}
+        swipeToCloseEnabled
         HeaderComponent={
           images === travel
             ? ({ imageIndex }) => {
                 const title = get(images, `${imageIndex}.title`);
-                return (
-                  <ImageHeader title={title} onRequestClose={onRequestClose} />
-                );
+                return <ImageHeader title={title} onRequestClose={onRequestClose} />;
               }
             : undefined
         }
         FooterComponent={({ imageIndex }) => (
           <ImageFooter imageIndex={imageIndex} imagesCount={images.length} />
         )}
+        renderCustomComponent={(props) => {
+          console.log(props.item.uri);
+          return (
+            <Animated.Image
+              source={props.item.uri}
+              onLoad={(event) => {
+                props.onLoad(event.nativeEvent.source.width, event.nativeEvent.source.height);
+              }}
+              style={props.style}
+            />
+          );
+        }}
       />
       <ImageList
         images={food.map((image) => image.thumbnail)}
@@ -114,7 +121,7 @@ export default function App() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: '#000',
     ...Platform.select({
       android: { paddingTop: StatusBar.currentHeight },
       default: null,
@@ -123,13 +130,13 @@ const styles = StyleSheet.create({
   about: {
     flex: 1,
     marginTop: -12,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   name: {
-    textAlign: "center",
+    textAlign: 'center',
     fontSize: 24,
-    fontWeight: "200",
-    color: "#FFFFFFEE",
+    fontWeight: '200',
+    color: '#FFFFFFEE',
   },
 });
