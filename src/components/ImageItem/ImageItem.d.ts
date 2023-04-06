@@ -11,9 +11,8 @@ import { Animated, GestureResponderEvent, Image, ViewStyle,StyleProp,GestureResp
 import { ImageSource } from "../../@types";
 
 
-export declare type ImageItemType<T = undefined> = {
+export declare type ImageItemType = {
   uri: ImageSource;
-  itemInfo?:T
 }
 
 
@@ -28,7 +27,7 @@ export type ImageItemProps = {
   renderCustomComponent:({item,onLoad,style,panHandlers} :{item:ImageItemType,onLoad:(width:number, height:number) => 
     void,  
      panHandlers?:GestureResponderHandler,
-     style: Animated.WithAnimatedValue<ImageStyle>
+     style: any
   }) =>React.ReactElement
 };
 

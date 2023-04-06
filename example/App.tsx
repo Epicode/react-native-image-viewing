@@ -92,7 +92,6 @@ export default function App() {
           <ImageFooter imageIndex={imageIndex} imagesCount={images.length} />
         )}
         renderCustomComponent={(props) => {
-          console.log(props.item.uri);
           return (
             <Animated.Image
               source={props.item.uri}

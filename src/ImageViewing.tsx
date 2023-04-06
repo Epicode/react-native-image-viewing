@@ -15,23 +15,17 @@ import {
   VirtualizedList,
   ModalProps,
   Modal,
-  Image,
-  ViewStyle,
-  StyleProp,
-  RegisteredStyle,
 } from 'react-native';
 import ImageItem, { ImageItemType } from './components/ImageItem/ImageItem';
 import ImageDefaultHeader from './components/ImageDefaultHeader';
 import StatusBarManager from './components/StatusBarManager';
-
 import useAnimatedComponents from './hooks/useAnimatedComponents';
 import useImageIndexChange from './hooks/useImageIndexChange';
 import useRequestClose from './hooks/useRequestClose';
 import { ImageSource } from './@types';
-import { ImageStyle } from 'react-native';
 
-type Props<T = undefined> = {
-  images: ImageItemType<T>[];
+type Props = {
+  images: ImageItemType[];
   keyExtractor?: (imageSrc: ImageSource, index: number) => string;
   imageIndex: number;
   visible: boolean;
@@ -50,10 +44,14 @@ type Props<T = undefined> = {
   }: {
     item: ImageItemType;
     onLoad: (width: number, height: number) => void;
-    style: Animated.WithAnimatedValue<ImageStyle>;
+    style: any;
   }) => React.ReactElement;
   HeaderComponent?: ComponentType<{ imageIndex: number }>;
-  FooterComponent?: ComponentType<{ imageIndex: number }>;
+  FooterComponent?: ComponentType<{
+    imageIndex: number;
+    onNext: () => void;
+    onPrevious: () => void;
+  }>;
 };
 
 const DEFAULT_ANIMATION_TYPE = 'fade';
@@ -64,7 +62,6 @@ const SCREEN_WIDTH = SCREEN.width;
 
 function ImageViewing({
   images,
-  keyExtractor,
   imageIndex,
   visible,
   onRequestClose,
@@ -80,7 +77,8 @@ function ImageViewing({
   FooterComponent,
   renderCustomComponent,
 }: Props) {
-  const imageList = useRef<VirtualizedList<ImageItemType>>(null);
+  const listRef = useRef<VirtualizedList<ImageItemType>>(null);
+
   const [opacity, onRequestCloseEnhanced] = useRequestClose(onRequestClose);
   const [currentImageIndex, onScroll] = useImageIndexChange(imageIndex, SCREEN);
   const [headerTransform, footerTransform, toggleBarsVisible] = useAnimatedComponents();
@@ -91,13 +89,30 @@ function ImageViewing({
     }
   }, [currentImageIndex]);
 
+  const onNext = useCallback(() => {
+    if (currentImageIndex + 1 <= images.length - 1) {
+      listRef.current?.scrollToIndex({
+        index: currentImageIndex + 1,
+      });
+    }
+  }, [listRef, currentImageIndex, images.length]);
+
+  const onPrevious = useCallback(() => {
+    if (currentImageIndex - 1 >= 0) {
+      listRef.current?.scrollToIndex({
+        index: currentImageIndex - 1,
+        animated: true,
+      });
+    }
+  }, [listRef, currentImageIndex]);
+
   const onZoom = useCallback(
     (isScaled: boolean) => {
       // @ts-ignore
-      imageList?.current?.setNativeProps({ scrollEnabled: !isScaled });
+      listRef?.current?.setNativeProps({ scrollEnabled: !isScaled });
       toggleBarsVisible(!isScaled);
     },
-    [imageList],
+    [listRef],
   );
 
   if (!visible) {
@@ -125,7 +140,7 @@ function ImageViewing({
           )}
         </Animated.View>
         <VirtualizedList
-          ref={imageList}
+          ref={listRef}
           data={images}
           horizontal
           pagingEnabled
@@ -135,14 +150,14 @@ function ImageViewing({
           showsHorizontalScrollIndicator={false}
           showsVerticalScrollIndicator={false}
           initialScrollIndex={imageIndex}
-          getItem={(_: any, index: number) => images[index]}
+          getItem={(_, index) => images[index]}
           getItemCount={() => images.length}
-          getItemLayout={(_: any, index: number) => ({
+          getItemLayout={(_, index) => ({
             length: SCREEN_WIDTH,
             offset: SCREEN_WIDTH * index,
             index,
           })}
-          keyExtractor={(_: any, index: number) => index}
+          keyExtractor={(_, index) => `${index}`}
           renderItem={({ item }: { item: ImageItemType }) => (
             <ImageItem
               onZoom={onZoom}
@@ -156,12 +171,13 @@ function ImageViewing({
             />
           )}
           onMomentumScrollEnd={onScroll}
-          //@ts-ignore
         />
         {typeof FooterComponent !== 'undefined' && (
           <Animated.View style={[styles.footer, { transform: footerTransform }]}>
             {React.createElement(FooterComponent, {
               imageIndex: currentImageIndex,
+              onNext: onNext,
+              onPrevious: onPrevious,
             })}
           </Animated.View>
         )}

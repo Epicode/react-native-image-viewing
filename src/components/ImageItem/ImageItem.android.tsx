@@ -117,6 +117,7 @@ const ImageItem = ({
           setDimensions({ width: width, height: height });
         },
         style: imageStylesWithOpacity,
+        panHandlers: panHandlers,
       })}
       {!loaded && <ImageLoading />}
     </ScrollView>
