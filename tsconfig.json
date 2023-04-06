@@ -11,6 +11,5 @@
     "types": ["react", "react-native"],
     "skipLibCheck": true
   },
-  "extends": "@tsconfig/react-native/tsconfig.json",
   "include": ["src/**/*"]
 }
