@@ -6,7 +6,7 @@
  *
  */
 
-import React, { ComponentType, useCallback, useRef, useEffect } from 'react';
+import React, { ComponentType, useCallback, useRef, useEffect, useMemo } from 'react';
 import {
   Animated,
   Dimensions,
@@ -51,6 +51,8 @@ type Props = {
     imageIndex: number;
     onNext: () => void;
     onPrevious: () => void;
+    disableNextButton: boolean;
+    disablePreviousButton: boolean;
   }>;
 };
 
@@ -106,6 +108,14 @@ function ImageViewing({
     }
   }, [listRef, currentImageIndex]);
 
+  const disableNextButton = useMemo(() => {
+    return currentImageIndex > images.length;
+  }, [currentImageIndex, images.length]);
+
+  const disablepPreviousButton = useMemo(() => {
+    return currentImageIndex - 1 < 0;
+  }, [currentImageIndex, images.length]);
+
   const onZoom = useCallback(
     (isScaled: boolean) => {
       // @ts-ignore
@@ -131,7 +141,7 @@ function ImageViewing({
       <StatusBarManager presentationStyle={presentationStyle} />
       <View style={[styles.container, { opacity, backgroundColor }]}>
         <Animated.View style={[styles.header, { transform: headerTransform }]}>
-          {typeof HeaderComponent !== 'undefined' ? (
+          {HeaderComponent ? (
             React.createElement(HeaderComponent, {
               imageIndex: currentImageIndex,
             })
@@ -172,15 +182,17 @@ function ImageViewing({
           )}
           onMomentumScrollEnd={onScroll}
         />
-        {typeof FooterComponent !== 'undefined' && (
+        {FooterComponent ? (
           <Animated.View style={[styles.footer, { transform: footerTransform }]}>
             {React.createElement(FooterComponent, {
               imageIndex: currentImageIndex,
               onNext: onNext,
               onPrevious: onPrevious,
+              disableNextButton: disableNextButton,
+              disablePreviousButton: disablepPreviousButton,
             })}
           </Animated.View>
-        )}
+        ) : null}
       </View>
     </Modal>
   );
